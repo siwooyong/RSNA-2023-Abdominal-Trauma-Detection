@@ -56,10 +56,11 @@ shuffle randomly the indexes of the sequence, but respecting the same order and 
     inds = np.stack([inds-1, inds, inds+1]).T.flatten()
     image = image[inds]
     
-## Loss : BCEWithLogitsLoss
-## scheduler : CosineAnnealingLR
-## optimizer : AdamW
-## learning rate : 5e-5
+## Train
+* Loss : BCEWithLogitsLoss
+* scheduler : CosineAnnealingLR
+* optimizer : AdamW
+* learning rate : 5e-5
 
 ## Postprocessing
 We simply multiplied the output by the weights of the competition metric :
@@ -285,10 +286,11 @@ We found that a channel size of 2 performed the best, we also initially tried us
             x = self.do_horizontal_flip(x)
             x = self.do_vertical_flip(x)
             return x
-## Loss : nn.CrossEntropyLoss(no class weight)
-## scheduler : cosine_schedule_with_warmup
-## optimizer : AdamW
-## learning rate :2e-4
+## Train 
+* Loss : nn.CrossEntropyLoss(no class weight)
+* scheduler : cosine_schedule_with_warmup
+* optimizer : AdamW
+* learning rate :2e-4
 
 ## Postprocessing
 We multiplied by the value that maximizes the validation score for each pred_df obtained for each fold.
