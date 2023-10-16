@@ -57,6 +57,7 @@ shuffle randomly the indexes of the sequence, but respecting the same order and 
     image = image[inds]
     
 ## Train
+
 * Loss : BCEWithLogitsLoss
 * scheduler : CosineAnnealingLR
 * optimizer : AdamW
@@ -287,6 +288,7 @@ We found that a channel size of 2 performed the best, we also initially tried us
             x = self.do_vertical_flip(x)
             return x
 ## Train 
+
 * Loss : nn.CrossEntropyLoss(no class weight)
 * scheduler : cosine_schedule_with_warmup
 * optimizer : AdamW
