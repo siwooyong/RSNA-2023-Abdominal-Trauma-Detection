@@ -1,13 +1,13 @@
 # RSNA-2023-Abdominal-Trauma-Detection
 
-Summary
+# Summary
 Our solution is an ensemble of one stage approach without segmentation and two stage approach with segmentation.
 
-One stage approach (public LB = 0.48, private LB = 0.44)
-Data Pre-Processing
+# One stage approach (public LB = 0.48, private LB = 0.44)
+## Data Pre-Processing
 If the dimension for the image is greater than (512, 512), we cropped the area with a higher density of pixels to get a (512, 512) image, then the input is resized to (96, 256, 256) for each serie following the same preprocessing steps that were used by hengck23 in his great [notebook].(https://www.kaggle.com/code/hengck23/lb0-55-2-5d-3d-sample-model)
 
-Model : resnest50d + GRU Attention
+## Model : resnest50d + GRU Attention
 We tried to predict each target independently from the others so we have 13 outputs
 
     class RSNAClassifier(nn.Module):
@@ -44,7 +44,7 @@ We tried to predict each target independently from the others so we have 13 outp
             pred = pred.view(bs, -1)
             return pred
             
-Augmentation
+## Augmentation
 Mixup
 Random crop + resize
 Random shift, scale, rotate
@@ -55,21 +55,21 @@ shuffle randomly the indexes of the sequence, but respecting the same order and 
     inds = np.stack([inds-1, inds, inds+1]).T.flatten()
     image = image[inds]
     
-Loss : BCEWithLogitsLoss
-scheduler : CosineAnnealingLR
-optimizer : AdamW
-learning rate : 5e-5
+## Loss : BCEWithLogitsLoss
+## scheduler : CosineAnnealingLR
+## optimizer : AdamW
+## learning rate : 5e-5
 
-Postprocessing
+## Postprocessing
 We simply multiplied the output by the weights of the competition metric :
 
     preds.loc[:, ['bowel_injury', 'kidney_low', 'liver_low', 'spleen_low']] *= 2
     preds.loc[:, ['kidney_high', 'liver_high', 'spleen_high']] *= 4
     preds.loc[:, ['extravasation_injury']] *= 6
 
-Two stage approach (public LB = 0.45, private LB = 0.43)
-stage1 : Segmentation
-Model : regnety002 + unet
+# Two stage approach (public LB = 0.45, private LB = 0.43)
+## stage1 : Segmentation
+## Model : regnety002 + unet
 
 Even with only 160 of 200 data (1th fold) used as training data, the model has already shown good performance.
 
@@ -125,13 +125,14 @@ Even with only 160 of 200 data (1th fold) used as training data, the model has a
             x_seg = self.segmentation_head(decoder_out)
     
             return nn.Sigmoid()(x_seg)
-stage2 : 2.5DCNN
-Data Pre-Processing:
+
+## stage2 : 2.5DCNN
+## Data Pre-Processing:
 We used the segmentation logits obtained from stage1 to crop livers, spleen, and kidney, and then resized each to (96, 224, 224).
 (We use 10-size padding when we crop the organs with segmentation logits)
 In addition, full ct data not cropped is resized to (128, 224, 224) and a total of four inputs are put into the model (full_video, crop_liver, crop_spleen, crop_kidney)
 
-Model : regnety002 + transformer
+## Model : regnety002 + transformer
 We initially used a custom any_injury_loss function, but found that it did not improve the performance.
 However, we retained it as the model output for validation score calculation purposes.
 For the model input channel, we experimented with different values, including 2, 3, 4, and 8.
@@ -242,7 +243,7 @@ We found that a channel size of 2 performed the best, we also initially tried us
             any_injury, _ = any_injury.max(1)
             return bowel, extravasation, kidney, liver, spleen, any_injury
 
-Augmentation
+## Augmentation
 
     class CustomAug(nn.Module):
         def __init__(self, prob = 0.5, s = 224):
@@ -283,12 +284,12 @@ Augmentation
             x = self.do_horizontal_flip(x)
             x = self.do_vertical_flip(x)
             return x
-Loss : nn.CrossEntropyLoss(no class weight)
-scheduler : cosine_schedule_with_warmup
-optimizer : AdamW
-learning rate :2e-4
+## Loss : nn.CrossEntropyLoss(no class weight)
+## scheduler : cosine_schedule_with_warmup
+## optimizer : AdamW
+## learning rate :2e-4
 
-Postprocessing
+## Postprocessing
 We multiplied by the value that maximizes the validation score for each pred_df obtained for each fold.
 
     weights = [
