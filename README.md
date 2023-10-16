@@ -1,6 +1,7 @@
 # RSNA-2023-Abdominal-Trauma-Detection
 
 # Summary
+
 Our solution is an ensemble of one stage approach without segmentation and two stage approach with segmentation.
 
 # One stage approach (public LB = 0.48, private LB = 0.44)
