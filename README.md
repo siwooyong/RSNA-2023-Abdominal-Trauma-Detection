@@ -49,10 +49,12 @@ Mixup
 Random crop + resize
 Random shift, scale, rotate
 shuffle randomly the indexes of the sequence, but respecting the same order and keeping the dependency between each three consecutive images:
+
     inds = np.random.choice(np.arange(1, 96-1), 32, replace = False)
     inds.sort()
     inds = np.stack([inds-1, inds, inds+1]).T.flatten()
     image = image[inds]
+    
 Loss : BCEWithLogitsLoss
 scheduler : CosineAnnealingLR
 optimizer : AdamW
@@ -61,9 +63,10 @@ learning rate : 5e-5
 Postprocessing
 We simply multiplied the output by the weights of the competition metric :
 
-preds.loc[:, ['bowel_injury', 'kidney_low', 'liver_low', 'spleen_low']] *= 2
-preds.loc[:, ['kidney_high', 'liver_high', 'spleen_high']] *= 4
-preds.loc[:, ['extravasation_injury']] *= 6
+    preds.loc[:, ['bowel_injury', 'kidney_low', 'liver_low', 'spleen_low']] *= 2
+    preds.loc[:, ['kidney_high', 'liver_high', 'spleen_high']] *= 4
+    preds.loc[:, ['extravasation_injury']] *= 6
+
 Two stage approach (public LB = 0.45, private LB = 0.43)
 stage1 : Segmentation
 Model : regnety002 + unet
@@ -288,25 +291,25 @@ learning rate :2e-4
 Postprocessing
 We multiplied by the value that maximizes the validation score for each pred_df obtained for each fold.
 
-weights = [
-    [0.9, 4, 2, 4, 2, 6, 6, 6],
-    [0.9, 1, 4, 3, 2, 5, 5, 6],
-    [0.2, 3, 2, 1, 2, 4, 2, 6],
-    [0.5, 2, 2, 2, 2, 2, 6, 6],
-    [1, 2, 3, 2, 6, 3, 6, 5]
-]
-
-y_pred = pred_df.copy().groupby('patient_id').mean().reset_index()
-
-w1, w2, w3, w4, w5, w6, w7, w8 = weights[i]
-
-y_pred['bowel_injury'] *= w1
-y_pred['kidney_low'] *= w2
-y_pred['liver_low'] *= w3
-y_pred['spleen_low'] *= w4
-y_pred['kidney_high'] *= w5
-y_pred['liver_high'] *= w6
-y_pred['spleen_high'] *= w7
-y_pred['extravasation_injury'] *= w8
-
-y_pred = y_pred ** 0.8
+    weights = [
+        [0.9, 4, 2, 4, 2, 6, 6, 6],
+        [0.9, 1, 4, 3, 2, 5, 5, 6],
+        [0.2, 3, 2, 1, 2, 4, 2, 6],
+        [0.5, 2, 2, 2, 2, 2, 6, 6],
+        [1, 2, 3, 2, 6, 3, 6, 5]
+    ]
+    
+    y_pred = pred_df.copy().groupby('patient_id').mean().reset_index()
+    
+    w1, w2, w3, w4, w5, w6, w7, w8 = weights[i]
+    
+    y_pred['bowel_injury'] *= w1
+    y_pred['kidney_low'] *= w2
+    y_pred['liver_low'] *= w3
+    y_pred['spleen_low'] *= w4
+    y_pred['kidney_high'] *= w5
+    y_pred['liver_high'] *= w6
+    y_pred['spleen_high'] *= w7
+    y_pred['extravasation_injury'] *= w8
+    
+    y_pred = y_pred ** 0.8
