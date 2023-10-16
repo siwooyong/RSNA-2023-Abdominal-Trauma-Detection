@@ -56,7 +56,7 @@ shuffle randomly the indexes of the sequence, but respecting the same order and 
     inds = np.stack([inds-1, inds, inds+1]).T.flatten()
     image = image[inds]
     
-## Train
+## Train Config
 
 * Loss : BCEWithLogitsLoss
 * scheduler : CosineAnnealingLR
@@ -287,7 +287,7 @@ We found that a channel size of 2 performed the best, we also initially tried us
             x = self.do_horizontal_flip(x)
             x = self.do_vertical_flip(x)
             return x
-## Train 
+## Train Config
 
 * Loss : nn.CrossEntropyLoss(no class weight)
 * scheduler : cosine_schedule_with_warmup
