@@ -1,5 +1,58 @@
 from transformers import RobertaPreLayerNormConfig, RobertaPreLayerNormModel
 
+class SegModel(nn.Module):
+    def __init__(self):
+        super(SegModel, self).__init__()
+
+        self.n_classes = len(
+            [
+                'background',
+                'liver',
+                'spleen',
+                'left kidney',
+                'right kidney',
+                'bowel'
+            ])
+        in_chans = 1
+        self.encoder = timm.create_model(
+            'regnety_002',
+            pretrained=False,
+            features_only=True,
+            in_chans=in_chans,
+        )
+        encoder_channels = tuple(
+            [in_chans]
+            + [
+                self.encoder.feature_info[i]["num_chs"]
+                for i in range(len(self.encoder.feature_info))
+            ]
+        )
+        self.decoder = UnetDecoder(
+            encoder_channels=encoder_channels,
+            decoder_channels=(256, 128, 64, 32, 16),
+            n_blocks=5,
+            use_batchnorm=True,
+            center=False,
+            attention_type=None,
+        )
+
+        self.segmentation_head = SegmentationHead(
+            in_channels=16,
+            out_channels=self.n_classes,
+            activation=None,
+            kernel_size=3,
+        )
+
+        self.bce_seg = nn.BCEWithLogitsLoss()
+
+    def forward(self, x_in):
+        enc_out = self.encoder(x_in)
+
+        decoder_out = self.decoder(*[x_in] + enc_out)
+        x_seg = self.segmentation_head(decoder_out)
+
+        return nn.Sigmoid()(x_seg)
+
 class FeatureExtractor(nn.Module):
     def __init__(self, hidden, num_channel):
         super(FeatureExtractor, self).__init__()
@@ -53,6 +106,7 @@ class ContextProcessor(nn.Module):
         x = self.dense(x)
         x = self.activation(x)
         return x
+        
 
 class Custom3DCNN(nn.Module):
     def __init__(self, hidden = 368, num_channel = 2):
